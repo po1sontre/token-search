@@ -35,7 +35,7 @@ def search_tokens(folder):
     print(Fore.YELLOW + f"Searching in: {folder}")
     
     # Regex pattern to match tokens with length between 59 and 64 characters
-    token_pattern = r"[A-Za-z0-9-_]{59,64}"
+    token_pattern = r"[A-Za-z0-9-_]{40,100}"
 
     # Specify the filenames to check for
     target_files = ["DiscordTokens.txt", "Tokens.txt"]
