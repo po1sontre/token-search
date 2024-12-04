@@ -1,95 +1,98 @@
 import os
-import tkinter as tk
-from tkinter import filedialog
-from colorama import init, Fore
-import re
+from tkinter import Tk
+from tkinter.filedialog import askdirectory
 
-# Initialize colorama for colored output
-init(autoreset=True)
+# ASCII art for display
+ascii_art = """
+██████   ██████   ██ ███████  ██████  ███    ██ ████████ ██████  ███████ 
+██   ██ ██    ██ ███ ██      ██    ██ ████   ██    ██    ██   ██ ██      
+██████  ██    ██  ██ ███████ ██    ██ ██ ██  ██    ██    ██████  █████   
+██      ██    ██  ██      ██ ██    ██ ██  ██ ██    ██    ██   ██ ██      
+██       ██████   ██ ███████  ██████  ██   ████    ██    ██   ██ ███████ 
+"""
 
-# ASCII art
-print("""
-      ▄         ▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄            ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄       ▄▄  ▄▄▄▄▄▄▄▄▄▄▄ 
-     ▐░▌       ▐░▌▐░░░░░░░░░░░▌▐░▌          ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░▌     ▐░░▌▐░░░░░░░░░░░▌
-     ▐░▌       ▐░▌▐░█▀▀▀▀▀▀▀▀▀ ▐░▌          ▐░█▀▀▀▀▀▀▀▀▀ ▐░█▀▀▀▀▀▀▀█░▌▐░▌░▌   ▐░▐░▌▐░█▀▀▀▀▀▀▀▀▀ 
-     ▐░▌       ▐░▌▐░▌          ▐░▌          ▐░▌          ▐░▌       ▐░▌▐░▌▐░▌ ▐░▌▐░▌          
-     ▐░▌   ▄   ▐░▌▐░█▄▄▄▄▄▄▄▄▄ ▐░▌          ▐░▌          ▐░▌       ▐░▌▐░▌ ▐░▐░▌ ▐░▌▐░█▄▄▄▄▄▄▄▄▄ 
-     ▐░▌  ▐░▌  ▐░▌▐░░░░░░░░░░░▌▐░▌          ▐░▌          ▐░▌       ▐░▌▐░▌  ▐░▌  ▐░▌▐░░░░░░░░░░░░░▌
-     ▐░▌ ▐░▌░▌ ▐░▌▐░█▀▀▀▀▀▀▀▀▀ ▐░▌          ▐░▌          ▐░▌       ▐░▌▐░▌   ▀   ▐░▌▐░█▀▀▀▀▀▀▀▀▀ 
-     ▐░▌▐░▌ ▐░▌▐░▌▐░▌          ▐░▌          ▐░▌          ▐░▌       ▐░▌▐░▌       ▐░▌▐░▌          
-     ▐░▌░▌   ▐░▐░▌▐░█▄▄▄▄▄▄▄▄▄ ▐░█▄▄▄▄▄▄▄▄▄ ▐░█▄▄▄▄▄▄▄▄▄ ▐░█▄▄▄▄▄▄▄█░▌▐░▌       ▐░▌▐░█▄▄▄▄▄▄▄▄▄ 
-     ▐░░▌     ▐░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░▌       ▐░▌▐░░░░░░░░░░░▌
-      ▀▀       ▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀         ▀  ▀▀▀▀▀▀▀▀▀▀▀ 
-""")
-
-def select_folder():
-    """Opens a folder selection dialog and returns the chosen path."""
-    root = tk.Tk()
-    root.withdraw()  # Hide the root window
-    folder = filedialog.askdirectory()
-    return folder
-
-def search_tokens(folder):
-    """Searches for token-like strings in the specified folder and subfolders."""
-    tokens_found = []
-    print(Fore.YELLOW + f"Searching in: {folder}")
+def find_and_collect_tokens():
+    # Open a folder selection dialog
+    Tk().withdraw()  # Hides the main tkinter window
+    starting_folder = askdirectory(title="Select Folder to Search")
     
-    # Regex pattern to match tokens with length between 59 and 64 characters
-    token_pattern = r"[A-Za-z0-9-_]{40,100}"
+    if not starting_folder:
+        print("No folder selected. Exiting.")
+        return
 
-    # Specify the filenames to check for
-    target_files = ["DiscordTokens.txt", "Tokens.txt"]
+    discord_tokens = []
+    other_tokens = []
+
+    # Walk through the directory tree
+    for root, _, files in os.walk(starting_folder):
+        for file in files:
+            if file.lower() == "discordtokens.txt" or file.lower() == "tokens.txt":
+                file_path = os.path.join(root, file)
+                try:
+                    # Read the contents of the file
+                    with open(file_path, "r") as f:
+                        tokens = f.readlines()
+                        for token in tokens:
+                            token = token.strip()  # Remove any surrounding whitespace or newlines
+                            if token and len(token) <= 80:  # Ensure token length doesn't exceed 80 characters
+                                if file.lower() == "discordtokens.txt":
+                                    discord_tokens.append(token)
+                                else:
+                                    other_tokens.append(token)
+                except Exception as e:
+                    print(f"Could not read {file_path}: {e}")
+
+    # Write Discord tokens to a separate file
+    try:
+        with open("DiscordTokens.txt", "w") as f:
+            for token in discord_tokens:
+                f.write(token + "\n")
+        print(f"Discord tokens collected successfully in DiscordTokens.txt")
+    except Exception as e:
+        print(f"Could not write to DiscordTokens.txt: {e}")
     
-    for dirpath, dirnames, filenames in os.walk(folder):
-        for filename in filenames:
-            # Check if the filename matches "DiscordTokens.txt" or "Tokens.txt"
-            if filename in target_files:
-                file_path = os.path.join(dirpath, filename)
-                with open(file_path, 'r', errors='ignore') as f:
-                    content = f.read()
-                    tokens = re.findall(token_pattern, content)
-                    tokens_found.extend(tokens)
-                    
-    return tokens_found
+    # Write other tokens to a separate file
+    try:
+        with open("Tokens.txt", "w") as f:
+            for token in other_tokens:
+                f.write(token + "\n")
+        print(f"Other tokens collected successfully in Tokens.txt")
+    except Exception as e:
+        print(f"Could not write to Tokens.txt: {e}")
 
-def save_results(tokens_found):
-    """Saves found tokens to a file."""
-    with open("found_tokens.txt", "w") as f:
-        for token in tokens_found:
-            f.write(f"{token}\n")
-    print(Fore.GREEN + "Tokens saved to 'found_tokens.txt'.")
+def delete_old_files():
+    # Delete both AllTokens.txt and DiscordTokens.txt files if they exist
+    files_to_delete = ["AllTokens.txt", "DiscordTokens.txt", "Tokens.txt"]
+    for file in files_to_delete:
+        if os.path.exists(file):
+            try:
+                os.remove(file)
+                print(f"Old {file} deleted successfully.")
+            except Exception as e:
+                print(f"Could not delete {file}: {e}")
+        else:
+            print(f"{file} does not exist.")
 
-def show_credits():
-    """Displays credits for the program."""
-    print(Fore.CYAN + "Discord Token Finder v1.0")
-    print(Fore.CYAN + "Developed by: po1sontre")
+def show_console_menu():
+    print(ascii_art)
+    print("\nMenu:")
+    print("1. Delete Old Tokens Files (AllTokens.txt, DiscordTokens.txt, Tokens.txt)")
+    print("2. Collect Tokens from Directory")
+    print("3. Exit")
 
-def main_menu():
-    """Main menu for the tool."""
+    # Get user input for menu choice
     while True:
-        print(Fore.BLUE + "\n--- Discord Token Finder ---")
-        print(Fore.BLUE + "1. Start Search")
-        print(Fore.BLUE + "2. Show Credits")
-        print(Fore.BLUE + "3. Exit")
+        choice = input("Enter your choice (1, 2, 3): ").strip()
         
-        choice = input(Fore.WHITE + "Choose an option: ")
-        
-        if choice == '1':
-            folder = select_folder()
-            if folder:
-                tokens = search_tokens(folder)
-                if tokens:
-                    print(Fore.GREEN + f"Found {len(tokens)} token(s).")
-                    save_results(tokens)
-                else:
-                    print(Fore.RED + "No tokens found.")
-        elif choice == '2':
-            show_credits()
-        elif choice == '3':
-            print(Fore.YELLOW + "Exiting program. Goodbye!")
+        if choice == "1":
+            delete_old_files()
+        elif choice == "2":
+            find_and_collect_tokens()
+        elif choice == "3":
+            print("Exiting...")
             break
         else:
-            print(Fore.RED + "Invalid option. Please try again.")
+            print("Invalid choice. Please enter 1, 2, or 3.")
 
-if __name__ == "__main__":
-    main_menu()
+# Run the console-based menu
+show_console_menu()
