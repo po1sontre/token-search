@@ -2,6 +2,7 @@ import os
 import tkinter as tk
 from tkinter import filedialog
 from colorama import init, Fore
+import re
 
 # Initialize colorama for colored output
 init(autoreset=True)
@@ -29,33 +30,30 @@ def select_folder():
     return folder
 
 def search_tokens(folder):
-    """Searches for token files in the specified folder and subfolders."""
+    """Searches for token-like strings in the specified folder and subfolders."""
     tokens_found = []
     print(Fore.YELLOW + f"Searching in: {folder}")
+    
+    # Regex pattern to match tokens with length between 59 and 64 characters
+    token_pattern = r"[A-Za-z0-9-_]{59,64}"
+    
     for dirpath, dirnames, filenames in os.walk(folder):
         for filename in filenames:
-            if "token" in filename.lower():
+            if filename.lower().endswith('.txt'):  # Only search in .txt files
                 file_path = os.path.join(dirpath, filename)
-                try:
-                    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                        tokens = f.read().strip()
-                        tokens_found.append((file_path, tokens))
-                except Exception as e:
-                    print(Fore.RED + f"Error reading {file_path}: {e}")
+                with open(file_path, 'r', errors='ignore') as f:
+                    content = f.read()
+                    tokens = re.findall(token_pattern, content)
+                    tokens_found.extend(tokens)
+                    
     return tokens_found
 
 def save_results(tokens_found):
     """Saves found tokens to a file."""
-    if tokens_found:
-        try:
-            with open("found_tokens.txt", "w") as f:
-                for path, token in tokens_found:
-                    f.write(f"File: {path}\nToken: {token}\n\n")
-            print(Fore.GREEN + "Results saved to 'found_tokens.txt'.")
-        except Exception as e:
-            print(Fore.RED + f"Error saving results: {e}")
-    else:
-        print(Fore.RED + "No tokens found to save.")
+    with open("found_tokens.txt", "w") as f:
+        for token in tokens_found:
+            f.write(f"{token}\n")
+    print(Fore.GREEN + "Tokens saved to 'found_tokens.txt'.")
 
 def show_credits():
     """Displays credits for the program."""
