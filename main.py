@@ -11,7 +11,7 @@ print("""
       ▄         ▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄            ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄       ▄▄  ▄▄▄▄▄▄▄▄▄▄▄ 
      ▐░▌       ▐░▌▐░░░░░░░░░░░▌▐░▌          ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░▌     ▐░░▌▐░░░░░░░░░░░▌
      ▐░▌       ▐░▌▐░█▀▀▀▀▀▀▀▀▀ ▐░▌          ▐░█▀▀▀▀▀▀▀▀▀ ▐░█▀▀▀▀▀▀▀█░▌▐░▌░▌   ▐░▐░▌▐░█▀▀▀▀▀▀▀▀▀ 
-     ▐░▌       ▐░▌▐░▌          ▐░▌          ▐░▌          ▐░▌       ▐░▌▐░▌▐░▌ ▐░▌▐░▌▐░▌          
+     ▐░▌       ▐░▌▐░▌          ▐░▌          ▐░▌          ▐░▌       ▐░▌▐░▌▐░▌ ▐░▌▐░▌          
      ▐░▌   ▄   ▐░▌▐░█▄▄▄▄▄▄▄▄▄ ▐░▌          ▐░▌          ▐░▌       ▐░▌▐░▌ ▐░▐░▌ ▐░▌▐░█▄▄▄▄▄▄▄▄▄ 
      ▐░▌  ▐░▌  ▐░▌▐░░░░░░░░░░░▌▐░▌          ▐░▌          ▐░▌       ▐░▌▐░▌  ▐░▌  ▐░▌▐░░░░░░░░░░░▌
      ▐░▌ ▐░▌░▌ ▐░▌▐░█▀▀▀▀▀▀▀▀▀ ▐░▌          ▐░▌          ▐░▌       ▐░▌▐░▌   ▀   ▐░▌▐░█▀▀▀▀▀▀▀▀▀ 
@@ -36,17 +36,26 @@ def search_tokens(folder):
         for filename in filenames:
             if "token" in filename.lower():
                 file_path = os.path.join(dirpath, filename)
-                with open(file_path, 'r') as f:
-                    tokens = f.read().strip()
-                    tokens_found.append((file_path, tokens))
+                try:
+                    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                        tokens = f.read().strip()
+                        tokens_found.append((file_path, tokens))
+                except Exception as e:
+                    print(Fore.RED + f"Error reading {file_path}: {e}")
     return tokens_found
 
 def save_results(tokens_found):
     """Saves found tokens to a file."""
-    with open("found_tokens.txt", "w") as f:
-        for path, token in tokens_found:
-            f.write(f"File: {path}\nToken: {token}\n\n")
-    print(Fore.GREEN + "Results saved to 'found_tokens.txt'.")
+    if tokens_found:
+        try:
+            with open("found_tokens.txt", "w") as f:
+                for path, token in tokens_found:
+                    f.write(f"File: {path}\nToken: {token}\n\n")
+            print(Fore.GREEN + "Results saved to 'found_tokens.txt'.")
+        except Exception as e:
+            print(Fore.RED + f"Error saving results: {e}")
+    else:
+        print(Fore.RED + "No tokens found to save.")
 
 def show_credits():
     """Displays credits for the program."""
